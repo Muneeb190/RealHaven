@@ -8,8 +8,9 @@ async function sendOfflineEmailNotification(recipientId, senderName, text, prope
     const recipient = await User.findById(recipientId);
     if (!recipient || !recipient.email) return;
 
+    const frontendUrl = process.env.CLIENT_URL || (process.env.CLIENT_ORIGIN ? process.env.CLIENT_ORIGIN.split(',')[0] : "http://localhost:3000");
     const subject = `New message on RealHaven from ${senderName}`;
-    const plainText = `Hi ${recipient.name},\n\nYou received a new message from ${senderName} regarding "${propertyTitle}":\n\n"${text}"\n\nReply at: http://localhost:3000/messages\n\nWarmly,\nRealHaven Team`;
+    const plainText = `Hi ${recipient.name},\n\nYou received a new message from ${senderName} regarding "${propertyTitle}":\n\n"${text}"\n\nReply at: ${frontendUrl}/messages\n\nWarmly,\nRealHaven Team`;
     
     const htmlText = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
@@ -19,7 +20,7 @@ async function sendOfflineEmailNotification(recipientId, senderName, text, prope
         <blockquote style="margin: 16px 0; padding: 12px 16px; background-color: #f3f4f6; border-left: 4px solid #0f766e; color: #1f2937; border-radius: 4px; font-style: italic;">
           "${text}"
         </blockquote>
-        <a href="http://localhost:3000/messages" style="display: inline-block; background-color: #0f766e; color: #ffffff; padding: 10px 20px; border-radius: 9999px; text-decoration: none; font-size: 14px; font-weight: 500; margin-top: 10px;">Reply to message</a>
+        <a href="${frontendUrl}/messages" style="display: inline-block; background-color: #0f766e; color: #ffffff; padding: 10px 20px; border-radius: 9999px; text-decoration: none; font-size: 14px; font-weight: 500; margin-top: 10px;">Reply to message</a>
         <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
         <p style="color: #9ca3af; font-size: 11px;">RealHaven — A small, human real estate index.</p>
       </div>
