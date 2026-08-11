@@ -319,6 +319,11 @@ const port = process.env.PORT || 5000;
 const server = http.createServer(app);
 initSocket(server);
 
+if (!process.env.MONGO_URI) {
+  console.error("FATAL ERROR: MONGO_URI environment variable is missing.");
+  process.exit(1);
+}
+
 mongoose.connect(process.env.MONGO_URI).then(() => {
   console.log("MongoDB connected");
   server.listen(port, () => console.log(`RealHaven API + Socket.io on http://localhost:${port}`));
