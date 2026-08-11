@@ -1,4 +1,17 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import dns from "dns";
+
+// Load environment variables from .env.local, falling back to .env
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+dotenv.config();
+
+// Fix for Node.js SRV DNS resolution issue in some environments (e.g. Windows)
+// where Node uses a local DNS resolver (127.0.0.1) that doesn't support SRV records.
+if (dns.getServers().includes("127.0.0.1")) {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+}
+
 import http from "http";
 import express from "express";
 import cors from "cors";
