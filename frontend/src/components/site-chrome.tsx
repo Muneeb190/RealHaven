@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import { api, type Conversation } from "@/lib/api";
 import { useAuth } from "@/lib/hooks";
 import { motion, AnimatePresence } from "framer-motion";
+import { getSocket } from "@/lib/socket";
 
 export function SiteNav() {
   const { user, isAuthed, signOut } = useAuth();
@@ -14,12 +15,27 @@ export function SiteNav() {
 
   useEffect(() => {
     if (!isAuthed) return;
-    api<{ conversations: Conversation[] }>("/conversations")
-      .then((d) => {
-        const total = d.conversations?.reduce((acc, c) => acc + (c.unreadCount || 0), 0) || 0;
-        setUnreadTotal(total);
-      })
-      .catch(() => { });
+    
+    const fetchUnread = () => {
+      api<{ conversations: Conversation[] }>("/conversations")
+        .then((d) => {
+          const total = d.conversations?.reduce((acc, c) => acc + (c.unreadCount || 0), 0) || 0;
+          setUnreadTotal(total);
+        })
+        .catch(() => { });
+    };
+
+    fetchUnread();
+
+    const s = getSocket();
+    if (s) {
+      s.on("message", fetchUnread);
+      s.on("read", fetchUnread);
+      return () => {
+        s.off("message", fetchUnread);
+        s.off("read", fetchUnread);
+      };
+    }
   }, [isAuthed, path]);
 
   const links = [

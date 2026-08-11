@@ -172,6 +172,9 @@ export function initSocket(server) {
   });
 
   io.on("connection", (socket) => {
+    // Join the user's personal room for global notifications
+    socket.join(`user:${socket.user._id}`);
+
     // Join a conversation room (server verifies membership)
     socket.on("join", async (conversationId) => {
       const convo = await Conversation.findById(conversationId);
@@ -210,7 +213,8 @@ export function initSocket(server) {
         convo.lastMessageAt = msg.createdAt;
         await convo.save();
 
-        io.to(`c:${conversationId}`).emit("message", msg);
+        const recipientId = String(socket.user._id) === String(convo.buyer) ? convo.agent : convo.buyer;
+        io.to(`c:${conversationId}`).to(`user:${recipientId}`).emit("message", msg);
         ack?.({ ok: true, message: msg });
 
         // Trigger offline email notification check asynchronously
@@ -252,7 +256,8 @@ export function initSocket(server) {
           { $addToSet: { readBy: socket.user._id } }
         );
 
-        io.to(`c:${conversationId}`).emit("read", { conversationId, readerId: socket.user._id });
+        const otherUserId = String(socket.user._id) === String(convo.buyer) ? convo.agent : convo.buyer;
+        io.to(`c:${conversationId}`).to(`user:${otherUserId}`).to(`user:${socket.user._id}`).emit("read", { conversationId, readerId: socket.user._id });
       } catch (e) {
         console.error("Socket read event error:", e.message);
       }
